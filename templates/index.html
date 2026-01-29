@@ -1,0 +1,5 @@
+<select id="sab">
+    {% for key, info in menu.items() %}
+    <option value="{{ key }}">{{ info.nombre }} ($ {{ info.precio }})</option>
+    {% endfor %}
+</select>
