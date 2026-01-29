@@ -1,5 +1,65 @@
-<select id="sab">
-    {% for key, info in menu.items() %}
-    <option value="{{ key }}">{{ info.nombre }} ($ {{ info.precio }})</option>
-    {% endfor %}
-</select>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MigaControl Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --primary: #e67e22; --dark: #2c3e50; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 15px; }
+        .card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        h2 { color: var(--dark); margin-top: 0; text-align: center; }
+        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1.5px solid #ddd; font-size: 16px; box-sizing: border-box; }
+        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
+        .pedido-card { border-left: 6px solid var(--primary); background: white; padding: 12px; margin-bottom: 10px; border-radius: 4px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>🥪 El Buen Sabor - App</h2>
+        <input type="text" id="cliente" placeholder="Nombre del Cliente">
+        <select id="sabor">
+            {% for key, info in menu.items() %}
+            <option value="{{ key }}">{{ info.nombre }} ($ {{ info.precio }})</option>
+            {% endfor %}
+        </select>
+        <input type="number" id="docenas" placeholder="Cantidad de Docenas" step="0.5">
+        <button onclick="enviar()">CARGAR VENTA</button>
+    </div>
+
+    <div id="lista-pedidos"></div>
+
+    <script>
+        async function enviar() {
+            const data = {
+                cliente: document.getElementById('cliente').value,
+                sabor: document.getElementById('sabor').value,
+                docenas: document.getElementById('docenas').value
+            };
+            const res = await fetch('/api/pedidos', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            if(res.ok) { 
+                document.getElementById('cliente').value = "";
+                actualizarLista(); 
+            }
+        }
+
+        async function actualizarLista() {
+            const res = await fetch('/api/pedidos');
+            const pedidos = await res.json();
+            const div = document.getElementById('lista-pedidos');
+            div.innerHTML = '<h3>Pedidos Recientes</h3>' + pedidos.map(p => `
+                <div class="pedido-card">
+                    <div><b>${p.cliente}</b><br><small>${p.sabor}</small></div>
+                    <div style="text-align:right"><b>${p.docenas} doc.</b><br><span style="color:green">$${p.total.toLocaleString()}</span></div>
+                </div>
+            `).join('');
+        }
+        actualizarLista();
+    </script>
+</body>
+</html>
